@@ -3164,6 +3164,7 @@ int tdls_verify_mic(u8 *kck, u8 trans_seq,
 }
 #endif //CONFIG_TDLS
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 void rtw_use_tkipkey_handler(RTW_TIMER_HDL_ARGS)
 {
         _adapter *padapter = (_adapter *)FunctionContext;
@@ -3187,6 +3188,7 @@ _func_enter_;
 _func_exit_;	
 
 }
+#endif
 
 /* Restore HW wep key setting according to key_mask */
 void rtw_sec_restore_wep_key(_adapter *adapter)

@@ -5772,21 +5772,31 @@ ODM_InitAllTimers(
 {
 #if(defined(CONFIG_HW_ANTENNA_DIVERSITY))
 #if (RTL8723B_SUPPORT == 1)||(RTL8821A_SUPPORT == 1)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	ODM_InitializeTimer(pDM_Odm,&pDM_Odm->DM_SWAT_Table.SwAntennaSwitchTimer_8723B,
 	(RT_TIMER_CALL_BACK)ODM_SW_AntDiv_Callback, NULL, "SwAntennaSwitchTimer_8723B");
+#else
+	timer_setup(&pDM_Odm->DM_SWAT_Table.SwAntennaSwitchTimer_8723B, ODM_SW_AntDiv_Callback, 0);
+#endif
 #endif
 #endif
 
 #if(defined(CONFIG_SW_ANTENNA_DIVERSITY))
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	ODM_InitializeTimer(pDM_Odm,&pDM_Odm->DM_SWAT_Table.SwAntennaSwitchTimer,
 		(RT_TIMER_CALL_BACK)odm_SwAntDivChkAntSwitchCallback, NULL, "SwAntennaSwitchTimer");
+#else
+	timer_setup(&pDM_Odm->DM_SWAT_Table.SwAntennaSwitchTimer, odm_SwAntDivChkAntSwitchCallback, 0);
+#endif
 #endif
 	
 #if (!(DM_ODM_SUPPORT_TYPE == ODM_CE))
 #if(defined(CONFIG_HW_ANTENNA_DIVERSITY))
 #if (RTL8188E_SUPPORT == 1)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	ODM_InitializeTimer(pDM_Odm,&pDM_Odm->FastAntTrainingTimer,
 		(RT_TIMER_CALL_BACK)odm_FastAntTrainingCallback, NULL, "FastAntTrainingTimer");
+#endif
 #endif
 #endif
 #endif
@@ -7132,16 +7142,35 @@ odm_SwAntDivChkAntSwitchWorkitemCallback(
 
 }
 #elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 VOID odm_SwAntDivChkAntSwitchCallback(void *FunctionContext)
+#else
+VOID odm_SwAntDivChkAntSwitchCallback(struct timer_list *t)
+#endif
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	PDM_ODM_T	pDM_Odm= (PDM_ODM_T)FunctionContext;
+#else
+	PDM_ODM_T	pDM_Odm = from_timer(pDM_Odm, t, DM_SWAT_Table.SwAntennaSwitchTimer);
+#endif
 	PADAPTER	padapter = pDM_Odm->Adapter;
 	if(padapter->net_closed == _TRUE)
 	    return;
 	odm_SwAntDivChkAntSwitch(pDM_Odm, SWAW_STEP_DETERMINE);	
 }
 #elif (DM_ODM_SUPPORT_TYPE & (ODM_AP|ODM_ADSL))
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 VOID odm_SwAntDivChkAntSwitchCallback(void *FunctionContext)
+#else
+VOID odm_SwAntDivChkAntSwitchCallback(struct timer_list *t)
+#endif
+{
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
+	PDM_ODM_T	pDM_Odm= (PDM_ODM_T)FunctionContext;
+#else
+	PDM_ODM_T	pDM_Odm = from_timer(pDM_Odm, t, DM_SWAT_Table.SwAntennaSwitchTimer);
+#endif
 {
 	PDM_ODM_T	pDM_Odm= (PDM_ODM_T)FunctionContext;
 	odm_SwAntDivChkAntSwitch(pDM_Odm, SWAW_STEP_DETERMINE);

@@ -1351,10 +1351,18 @@ ODM_SW_AntDiv_WorkitemCallback(
 #endif  //#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
 
 #if (DM_ODM_SUPPORT_TYPE == ODM_CE)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 VOID
 ODM_SW_AntDiv_Callback(void *FunctionContext)
+#else
+VOID ODM_SW_AntDiv_Callback(struct timer_list *t)
+#endif
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	PDM_ODM_T	pDM_Odm= (PDM_ODM_T)FunctionContext;
+#else
+	PDM_ODM_T pDM_Odm = from_timer(pDM_Odm, t, DM_SWAT_Table.SwAntennaSwitchTimer_8723B);
+#endif
 	PADAPTER	padapter = pDM_Odm->Adapter;
 	if(padapter->net_closed == _TRUE)
 	    return;

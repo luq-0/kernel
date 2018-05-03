@@ -81,8 +81,12 @@ ODM_SW_AntDiv_WorkitemCallback(
 );
 #endif //#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
 #if (DM_ODM_SUPPORT_TYPE == ODM_CE)
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 VOID
 ODM_SW_AntDiv_Callback(void *FunctionContext);
+#else
+VOID ODM_SW_AntDiv_Callback(struct timer_list *t);
+#endif
 #endif //#if (DM_ODM_SUPPORT_TYPE == ODM_CE)
 #endif
 

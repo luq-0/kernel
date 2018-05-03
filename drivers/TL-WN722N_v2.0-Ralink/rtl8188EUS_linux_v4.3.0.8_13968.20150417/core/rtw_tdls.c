@@ -2824,9 +2824,17 @@ void rtw_build_tunneled_probe_rsp_ies(_adapter * padapter, struct xmit_frame * p
 }
 #endif //CONFIG_WFD
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 void _tdls_tpk_timer_hdl(void *FunctionContext)
+#else
+void _tdls_tpk_timer_hdl(struct timer_list *t)
+#endif
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	struct sta_info *ptdls_sta = (struct sta_info *)FunctionContext;
+#else
+	struct sta_info *ptdls_sta = container_of(t, struct sta_info, TPK_timer);
+#endif
 	struct tdls_txmgmt txmgmt;
 
 	_rtw_memset(&txmgmt, 0x00, sizeof(struct tdls_txmgmt));
@@ -2845,10 +2853,18 @@ void _tdls_tpk_timer_hdl(void *FunctionContext)
 // TDLS_DONE_CH_SEN: channel sensing and report candidate channel
 // TDLS_OFF_CH: first time set channel to off channel
 // TDLS_BASE_CH: when go back to the channel linked with AP, send null data to peer STA as an indication
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 void _tdls_ch_switch_timer_hdl(void *FunctionContext)
+#else
+void _tdls_ch_switch_timer_hdl(struct timer_list *t)
+#endif
 {
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	struct sta_info *ptdls_sta = (struct sta_info *)FunctionContext;
+#else
+	struct sta_info *ptdls_sta = container_of(t, struct sta_info, TPK_timer);
+#endif
 	_adapter *padapter = ptdls_sta->padapter;
 	
 	if( ptdls_sta->option == TDLS_DONE_CH_SEN ){
@@ -2861,21 +2877,47 @@ void _tdls_ch_switch_timer_hdl(void *FunctionContext)
 	}
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 void _tdls_base_ch_timer_hdl(void *FunctionContext)
+#else
+void _tdls_base_ch_timer_hdl(struct timer_list *t)
+#endif
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	struct sta_info *ptdls_sta = (struct sta_info *)FunctionContext;
+#else
+	struct sta_info *ptdls_sta = container_of(t, struct sta_info, TPK_timer);
+#endif
 	rtw_tdls_cmd(ptdls_sta->padapter, ptdls_sta->hwaddr, TDLS_P_OFF_CH);
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 void _tdls_off_ch_timer_hdl(void *FunctionContext)
+#else
+void _tdls_off_ch_timer_hdl(struct timer_list *t)
+#endif
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	struct sta_info *ptdls_sta = (struct sta_info *)FunctionContext;
+#else
+	struct sta_info *ptdls_sta = container_of(t, struct sta_info, TPK_timer);
+#endif
 	rtw_tdls_cmd(ptdls_sta->padapter, ptdls_sta->hwaddr, TDLS_P_BASE_CH );
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 void _tdls_handshake_timer_hdl(void *FunctionContext)
+#else
+void _tdls_handshake_timer_hdl(struct timer_list *t)
+#endif
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
+	if(FunctionContext == NULL) return;
 	struct sta_info *ptdls_sta = (struct sta_info *)FunctionContext;
+#else
+	if(t == NULL) return;
+	struct sta_info *ptdls_sta = container_of(t, struct sta_info, TPK_timer);
+#endif
 
 	if(ptdls_sta != NULL)
 	{
@@ -2887,9 +2929,19 @@ void _tdls_handshake_timer_hdl(void *FunctionContext)
 	}
 }
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 void _tdls_pti_timer_hdl(void *FunctionContext)
+#else
+void _tdls_pti_timer_hdl(struct timer_list *t)
+#endif
 {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
+	if(FunctionContext == NULL) return;
 	struct sta_info *ptdls_sta = (struct sta_info *)FunctionContext;
+#else
+	if(t == NULL) return;
+	struct sta_info *ptdls_sta = container_of(t, struct sta_info, TPK_timer);
+#endif
 	_adapter *padapter = ptdls_sta->padapter;
 	struct tdls_txmgmt txmgmt;
 
@@ -2910,12 +2962,21 @@ void _tdls_pti_timer_hdl(void *FunctionContext)
 void rtw_init_tdls_timer(_adapter *padapter, struct sta_info *psta)
 {
 	psta->padapter=padapter;
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
 	_init_timer(&psta->TPK_timer, padapter->pnetdev, _tdls_tpk_timer_hdl, psta);
 	_init_timer(&psta->option_timer, padapter->pnetdev, _tdls_ch_switch_timer_hdl, psta);
 	_init_timer(&psta->base_ch_timer, padapter->pnetdev, _tdls_base_ch_timer_hdl, psta);
 	_init_timer(&psta->off_ch_timer, padapter->pnetdev, _tdls_off_ch_timer_hdl, psta);
 	_init_timer(&psta->handshake_timer, padapter->pnetdev, _tdls_handshake_timer_hdl, psta);
 	_init_timer(&psta->pti_timer, padapter->pnetdev, _tdls_pti_timer_hdl, psta);
+#else
+	timer_setup(&psta->TPK_timer, _tdls_tpk_timer_hdl, psta);
+	timer_setup(&psta->option_timer, _tdls_ch_switch_timer_hdl, psta);
+	timer_setup(&psta->base_ch_timer, _tdls_base_ch_timer_hdl, psta);
+	timer_setup(&psta->off_ch_timer, _tdls_off_ch_timer_hdl, psta);
+	timer_setup(&psta->handshake_timer, _tdls_handshake_timer_hdl, psta);
+	timer_setup(&psta->pti_timer, _tdls_pti_timer_hdl, psta);
+#endif
 }
 
 void rtw_free_tdls_timer(struct sta_info *psta)

@@ -875,7 +875,9 @@ check_bss:
                         .req_ie_len = pmlmepriv->assoc_req_len-sizeof(struct rtw_ieee80211_hdr_3addr)-2,
                         .resp_ie = pmlmepriv->assoc_rsp+sizeof(struct rtw_ieee80211_hdr_3addr)+6,
                         .resp_ie_len = pmlmepriv->assoc_rsp_len-sizeof(struct rtw_ieee80211_hdr_3addr)-6,
+			#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 15, 0)
                         .authorized = 1,
+			#endif
                 };
 		cfg80211_roamed(padapter->pnetdev
 			, &roaminfo
@@ -892,6 +894,9 @@ check_bss:
 			, pmlmepriv->assoc_rsp_len-sizeof(struct rtw_ieee80211_hdr_3addr)-6
 			, GFP_ATOMIC);
                 #endif
+		#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 15, 0)
+			cfg80211_port_authorized(padapter->pnetdev, cur_network->network.MacAddress, GFP_ATOMIC);
+		#endif
 	}
 	else
 	{
